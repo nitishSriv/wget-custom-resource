@@ -1,0 +1,35 @@
+resource_types:
+- name: wget-resource
+  type: registry-image
+  source:
+    repository: nsrivastrh/wget-resource-arm
+    tag: latest
+
+resources:
+- name: wget-custom-resource
+  type: wget-resource
+  source:
+    url: "https://github.com/concourse/concourse/releases/download/v7.9.1/fly-7.9.1-linux-amd64.tgz"
+
+jobs:
+- name: fetch-resource
+  public: true
+  plan:
+  - get: wget-custom-resource
+    trigger: true
+  - task: extract-resource
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: busybox
+      inputs:
+      - name: wget-custom-resource
+      run:
+        path: sh
+        args:
+        - -exc
+        - |
+          echo "Resource version:"
+          cat wget-custom-resource/version.txt
